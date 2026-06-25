@@ -79,4 +79,18 @@ class OrderService
         $order->delete();
     }
 
+    public function confirm(Order $order): Order
+{
+    $order->confirm();
+
+    return $order->fresh();
+}
+
+public function cancel(Order $order): Order
+{
+    $order->cancel();
+
+    return $order->fresh();
+}
+
 }
