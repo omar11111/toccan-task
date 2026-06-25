@@ -2,6 +2,7 @@
 
 namespace App\PaymentGateways;
 
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\PaymentGateways\Contracts\PaymentGatewayInterface;
@@ -33,7 +34,7 @@ class CreditCardGateway implements PaymentGatewayInterface, RefundableGatewayInt
         // محاكاة فشل: لو رقم الكارت بينتهي بـ 0000، نفترض رفض من البنك
         if ($cardNumber && str_ends_with($cardNumber, '0000')) {
             return [
-                'status' => 'failed',
+                'status' => PaymentStatus::Failed->value,
                 'gateway_reference' => null,
                 'raw_response' => ['card_last_four' => substr($cardNumber, -4)],
                 'failure_reason' => 'Card declined by issuer (simulated).',
@@ -41,7 +42,7 @@ class CreditCardGateway implements PaymentGatewayInterface, RefundableGatewayInt
         }
 
         return [
-            'status' => 'successful',
+            'status' => PaymentStatus::Successful->value,
             'gateway_reference' => 'cc_' . Str::random(20),
             'raw_response' => ['amount' => (float) $order->total, 'currency' => 'USD'],
             'failure_reason' => null,

@@ -2,6 +2,7 @@
 
 namespace App\PaymentGateways;
 
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\PaymentGateways\Contracts\PaymentGatewayInterface;
@@ -29,7 +30,7 @@ class PaypalGateway implements PaymentGatewayInterface, RefundableGatewayInterfa
         // (ممكن نضيف نفس منطق المحاكاة لو احتجنا نتست فشل Paypal بالتحديد)
 
         return [
-            'status' => 'successful',
+            'status' => PaymentStatus::Successful->value,
             'gateway_reference' => 'pp_' . Str::random(20),
             'raw_response' => ['amount' => (float) $order->total, 'currency' => 'USD'],
             'failure_reason' => null,
