@@ -1,0 +1,625 @@
+{
+  "info": {
+    "_postman_id": "2482d53f-f370-4e5a-8ff7-d64e80316bd8",
+    "name": "Order & Payment Management API",
+    "description": "Laravel-based Order & Payment Management API.\n\nFlow to test the happy path:\n1. Register or Login (token is saved automatically to {{access_token}})\n2. Create Order\n3. Confirm Order\n4. Process Payment (remember to set a unique Idempotency-Key)\n5. View Order (status should now be `paid`)\n\nThe collection uses variables: {{base_url}}, {{access_token}}, {{order_id}}. The first two are set automatically by test scripts on Register/Login and Create Order requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14595511"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', body.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Omar Test\",\n    \"email\": \"omar@test.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Creates a new user account and returns a JWT access token.\n\nSuccess: 201 Created\nFailure (duplicate email): 422 Unprocessable Entity\nFailure (password mismatch): 422 Unprocessable Entity"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', body.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"omar@test.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates an existing user and returns a JWT access token.\n\nSuccess: 200 OK\nFailure (wrong credentials): 401 Unauthorized"
+          },
+          "response": []
+        },
+        {
+          "name": "Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the currently authenticated user.\n\nSuccess: 200 OK\nFailure (no/invalid token): 401 Unauthorized"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Invalidates the current JWT token.\n\nSuccess: 200 OK"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('order_id', body.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"customer_name\": \"Omar Test\",\n    \"customer_email\": \"omar@test.com\",\n    \"items\": [\n        {\n            \"product_name\": \"Laptop\",\n            \"quantity\": 1,\n            \"price\": 15000\n        },\n        {\n            \"product_name\": \"Mouse\",\n            \"quantity\": 2,\n            \"price\": 250\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Creates a new order with one or more items. The total is calculated server-side.\n\nSuccess: 201 Created\nFailure (no items / invalid quantity-price): 422 Unprocessable Entity\nFailure (no auth): 401 Unauthorized"
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders?status=confirmed&per_page=15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed",
+                  "description": "Optional: pending|confirmed|cancelled|paid"
+                },
+                {
+                  "key": "per_page",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "Lists orders belonging to the authenticated user. Supports filtering by status and pagination.\n\nSuccess: 200 OK"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Returns a single order with its items and payments.\n\nSuccess: 200 OK\nFailure (not owner): 403 Forbidden\nFailure (not found): 404 Not Found"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"customer_name\": \"Omar Updated\",\n    \"items\": [\n        {\n            \"product_name\": \"Laptop\",\n            \"quantity\": 1,\n            \"price\": 16000\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Updates an order. PUT semantics: if `items` is provided, it FULLY REPLACES the existing items (not a partial merge). Fields omitted entirely (e.g. `customer_email`) are left unchanged.\n\nSuccess: 200 OK\nFailure (not owner): 403 Forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "confirm"
+              ]
+            },
+            "description": "Transitions the order from `pending` to `confirmed`. Required before a payment can be processed.\n\nSuccess: 200 OK\nFailure (invalid transition, e.g. already confirmed/paid/cancelled): 409 Conflict"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancels an order. Allowed from `pending` or `confirmed`. Not allowed once `paid` (terminal state).\n\nSuccess: 200 OK\nFailure (invalid transition, e.g. already paid): 409 Conflict"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Deletes an order. Only allowed if the order has no associated payments.\n\nSuccess: 204 No Content\nFailure (has payments): 409 Conflict\nFailure (not owner): 403 Forbidden"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Process Payment (Credit Card - Success)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$randomUUID}}",
+                "description": "Required. Generate a new unique value per logical payment attempt. Re-sending the SAME key returns the original result instead of reprocessing."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"payment_method\": \"credit_card\",\n    \"gateway_data\": {\n        \"card_number\": \"4111111111111111\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "payments"
+              ]
+            },
+            "description": "Processes a payment for a CONFIRMED order. This card number does not end in 0000, so the simulated gateway returns success and the order transitions to `paid`.\n\nSuccess: 201 Created (status: successful)\nFailure (order not confirmed / already paid): 409 Conflict\nFailure (missing Idempotency-Key header): 422 Unprocessable Entity\nFailure (unsupported payment_method): 422 Unprocessable Entity"
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment (Credit Card - Simulated Decline)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$randomUUID}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"payment_method\": \"credit_card\",\n    \"gateway_data\": {\n        \"card_number\": \"4111111111110000\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "payments"
+              ]
+            },
+            "description": "Card numbers ending in 0000 are simulated as a decline by the gateway. The payment record is stored as `failed`, but the order remains `confirmed` (NOT changed) — allowing a retry.\n\nResponse: 201 Created (status: failed) — note this is still 201, the HTTP request succeeded; the payment outcome itself is `failed`."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment (PayPal)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$randomUUID}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"payment_method\": \"paypal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "payments"
+              ]
+            },
+            "description": "Demonstrates the second gateway (added with zero changes to the resolver). Always simulated as successful."
+          },
+          "response": []
+        },
+        {
+          "name": "List Payments for Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "payments"
+              ]
+            },
+            "description": "Lists all payment attempts for a specific order.\n\nSuccess: 200 OK\nFailure (not owner): 403 Forbidden"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Payments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments?per_page=15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "Lists all payments across all of the authenticated user's orders.\n\nSuccess: 200 OK"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
