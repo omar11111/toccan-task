@@ -90,6 +90,9 @@ Auth and registration endpoints are rate-limited to 5 requests/minute per IP.
 
 ---
 
+Test Results 
+![Test result](image.png)
+
 ## Architecture Decisions
 
 ### 1. UUID v7 Primary Keys
