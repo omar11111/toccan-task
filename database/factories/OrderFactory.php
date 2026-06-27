@@ -1,6 +1,7 @@
 <?php
 
 // database/factories/OrderFactory.php
+
 namespace Database\Factories;
 
 use App\Enums\OrderStatus;

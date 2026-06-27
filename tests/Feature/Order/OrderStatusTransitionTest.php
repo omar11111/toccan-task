@@ -40,7 +40,7 @@ class OrderStatusTransitionTest extends TestCase
         $response = $this->actingAs($user, 'api')->patchJson("/api/orders/{$order->id}/cancel");
 
         $response->assertStatus(409)
-            ->assertJsonFragment(['message' => "Cannot transition order from [paid] to [cancelled]."]);
+            ->assertJsonFragment(['message' => 'Cannot transition order from [paid] to [cancelled].']);
     }
 
     public function test_cannot_confirm_an_already_confirmed_order(): void

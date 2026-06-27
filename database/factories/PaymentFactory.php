@@ -1,5 +1,7 @@
 <?php
+
 // database/factories/PaymentFactory.php
+
 namespace Database\Factories;
 
 use App\Enums\PaymentStatus;
@@ -19,7 +21,7 @@ class PaymentFactory extends Factory
             'payment_method' => 'credit_card',
             'status' => PaymentStatus::Pending,
             'amount' => $this->faker->randomFloat(2, 100, 5000),
-            'idempotency_key' => \Illuminate\Support\Str::uuid7()->toString(),
+            'idempotency_key' => Str::uuid7()->toString(),
         ];
     }
 
