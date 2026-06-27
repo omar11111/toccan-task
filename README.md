@@ -6,7 +6,7 @@ A Laravel-based REST API for managing orders and payments, built with extensibil
 
 ## Tech Stack
 
-- **Laravel 11**
+- **Laravel 13**
 - **MySQL** (UUID v7 primary keys)
 - **JWT Authentication** (`tymon/jwt-auth`)
 - **PHPStan** (with Larastan) for static analysis
