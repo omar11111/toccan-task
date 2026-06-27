@@ -43,7 +43,7 @@ class CreditCardGateway implements PaymentGatewayInterface, RefundableGatewayInt
 
         return [
             'status' => PaymentStatus::Successful->value,
-            'gateway_reference' => 'cc_' . Str::random(20),
+            'gateway_reference' => 'cc_'.Str::random(20),
             'raw_response' => ['amount' => (float) $order->total, 'currency' => 'USD'],
             'failure_reason' => null,
         ];
@@ -63,7 +63,7 @@ class CreditCardGateway implements PaymentGatewayInterface, RefundableGatewayInt
 
         return [
             'successful' => true,
-            'gateway_reference' => 'rf_' . Str::random(20),
+            'gateway_reference' => 'rf_'.Str::random(20),
             'raw_response' => ['refunded_amount' => $refundAmount],
             'failure_reason' => null,
         ];

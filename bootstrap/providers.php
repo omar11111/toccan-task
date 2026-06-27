@@ -5,5 +5,5 @@ use App\Providers\PaymentGatewayServiceProvider;
 
 return [
     AppServiceProvider::class,
-    PaymentGatewayServiceProvider::class
+    PaymentGatewayServiceProvider::class,
 ];

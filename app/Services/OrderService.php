@@ -80,17 +80,16 @@ class OrderService
     }
 
     public function confirm(Order $order): Order
-{
-    $order->confirm();
+    {
+        $order->confirm();
 
-    return $order->fresh();
-}
+        return $order->fresh();
+    }
 
-public function cancel(Order $order): Order
-{
-    $order->cancel();
+    public function cancel(Order $order): Order
+    {
+        $order->cancel();
 
-    return $order->fresh();
-}
-
+        return $order->fresh();
+    }
 }

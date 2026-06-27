@@ -82,7 +82,7 @@ class Order extends Model
     public function assertCanBeDeleted(): void
     {
         if (! $this->canBeDeleted()) {
-            throw new OrderHasPaymentsException();
+            throw new OrderHasPaymentsException;
         }
     }
 

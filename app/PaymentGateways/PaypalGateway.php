@@ -31,7 +31,7 @@ class PaypalGateway implements PaymentGatewayInterface, RefundableGatewayInterfa
 
         return [
             'status' => PaymentStatus::Successful->value,
-            'gateway_reference' => 'pp_' . Str::random(20),
+            'gateway_reference' => 'pp_'.Str::random(20),
             'raw_response' => ['amount' => (float) $order->total, 'currency' => 'USD'],
             'failure_reason' => null,
         ];
@@ -51,7 +51,7 @@ class PaypalGateway implements PaymentGatewayInterface, RefundableGatewayInterfa
 
         return [
             'successful' => true,
-            'gateway_reference' => 'pprf_' . Str::random(20),
+            'gateway_reference' => 'pprf_'.Str::random(20),
             'raw_response' => ['refunded_amount' => $refundAmount],
             'failure_reason' => null,
         ];

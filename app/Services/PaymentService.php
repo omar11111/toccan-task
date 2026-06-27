@@ -18,7 +18,7 @@ class PaymentService
     ) {}
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function process(Order $order, string $paymentMethod, string $idempotencyKey, array $data): Payment
     {
@@ -37,7 +37,7 @@ class PaymentService
             $lockedOrder = Order::lockForUpdate()->findOrFail($order->id);
 
             if ($lockedOrder->status === OrderStatus::Paid) {
-                throw new PaymentAlreadyProcessedException();
+                throw new PaymentAlreadyProcessedException;
             }
 
             if ($lockedOrder->status !== OrderStatus::Confirmed) {

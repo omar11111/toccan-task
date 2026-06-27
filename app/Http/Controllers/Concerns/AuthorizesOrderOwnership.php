@@ -1,5 +1,7 @@
-<?php 
+<?php
+
 // app/Http/Controllers/Concerns/AuthorizesOrderOwnership.php
+
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Order;

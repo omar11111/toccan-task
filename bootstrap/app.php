@@ -1,4 +1,5 @@
 <?php
+
 // bootstrap/app.php
 
 use App\Http\Middleware\EnsureIdempotencyKeyIsPresent;
