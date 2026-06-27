@@ -1,0 +1,97 @@
+<?php
+
+namespace Tests\Feature\Payment;
+
+use App\Enums\OrderStatus;
+use App\Models\Order;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ProcessPaymentTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_can_process_payment_for_confirmed_order(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Confirmed]);
+
+        $response = $this->actingAs($user, 'api')
+            ->withHeaders(['Idempotency-Key' => 'test-key-001'])
+            ->postJson("/api/orders/{$order->id}/payments", [
+                'payment_method' => 'credit_card',
+                'gateway_data' => ['card_number' => '4111111111111111'],
+            ]);
+
+        $response->assertStatus(201)->assertJsonPath('data.status', 'successful');
+
+        $this->assertEquals(OrderStatus::Paid, $order->refresh()->status);
+    }
+
+    public function test_simulated_failed_payment_does_not_change_order_status(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Confirmed]);
+
+        $response = $this->actingAs($user, 'api')
+            ->withHeaders(['Idempotency-Key' => 'test-key-fail-001'])
+            ->postJson("/api/orders/{$order->id}/payments", [
+                'payment_method' => 'credit_card',
+                'gateway_data' => ['card_number' => '4111111111110000'], // ينتهي بـ 0000 → فشل
+            ]);
+
+        $response->assertStatus(201)->assertJsonPath('data.status', 'failed');
+
+        // الأهم: الـ Order لازم يفضل confirmed، فشل الدفع لا يغير حالة الـ Order
+        $this->assertEquals(OrderStatus::Confirmed, $order->refresh()->status);
+    }
+
+    public function test_cannot_process_payment_for_pending_order(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Pending]);
+
+        $response = $this->actingAs($user, 'api')
+            ->withHeaders(['Idempotency-Key' => 'test-key-002'])
+            ->postJson("/api/orders/{$order->id}/payments", ['payment_method' => 'credit_card']);
+
+        $response->assertStatus(409);
+    }
+
+    public function test_cannot_process_payment_for_already_paid_order(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Paid]);
+
+        $response = $this->actingAs($user, 'api')
+            ->withHeaders(['Idempotency-Key' => 'test-key-003'])
+            ->postJson("/api/orders/{$order->id}/payments", ['payment_method' => 'credit_card']);
+
+        $response->assertStatus(409);
+    }
+
+    public function test_payment_request_without_idempotency_key_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Confirmed]);
+
+        $response = $this->actingAs($user, 'api')
+            ->postJson("/api/orders/{$order->id}/payments", ['payment_method' => 'credit_card']);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_payment_request_rejects_unsupported_gateway(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->for($user)->create(['status' => OrderStatus::Confirmed]);
+
+        $response = $this->actingAs($user, 'api')
+            ->withHeaders(['Idempotency-Key' => 'test-key-004'])
+            ->postJson("/api/orders/{$order->id}/payments", ['payment_method' => 'bitcoin']);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['payment_method']);
+    }
+}
