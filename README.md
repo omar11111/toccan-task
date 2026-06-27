@@ -65,6 +65,8 @@ php artisan test
 
 ## API Endpoints
 
+You Can Imort PostMan Collection  to view all points
+
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | POST | `/api/auth/register` | — | Register a new user |
